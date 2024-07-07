@@ -9,8 +9,8 @@ export default function FirstFormText() {
         <h1 className="text-[#00FFE0]">IA</h1>
       </span>
       <h4 className=" w-[35rem]">
-        Encuentra y genera el estado del arte de un artículo de investigación
-        mediante IA en poco tiempo
+        Genera el estado del arte de un artículo de investigación mediante IA en
+        poco tiempo
       </h4>
     </>
   );
