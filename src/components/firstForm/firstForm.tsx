@@ -1,43 +1,50 @@
-import { useEffect, useState } from "react";
 import FirstFormText from "./firstFormText";
 import { IoCloudUploadSharp } from "react-icons/io5";
-import { IoIosClose } from "react-icons/io";
+import axios from "axios";
+import { useState } from "react";
 
-interface PropsType {
-  id: number;
-  file: File;
-}
+export default function FirstForm({ onMoveForward,onDataFromFirstForm }) {
+  const [files, setFiles] = useState([]);
 
-export default function FirstForm() {
-  const [pdfFiles, setPdfFiles] = useState<File[]>([]);
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const newPdfFiles = files.map((file) => ({
-      name: file.name,
-      data: URL.createObjectURL(file),
-    }));
-
-    setPdfFiles((prevFiles) => [...prevFiles, ...newPdfFiles]);
+  const handleFileChange = (e) => {
+    setFiles(e.target.files);
+    console.log(e.target.files); // Muestra los archivos en la consola
   };
 
-  const deleteFile = (fileName) => {
-    const updatedFiles = pdfFiles.filter((file) => file.name !== fileName);
-    setPdfFiles(updatedFiles);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log(files);
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      formData.append("pdfFiles", files[i]);
+    }
+
+    try {
+      const request = await axios.post("http://127.0.0.1:5000/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log(request.data.completion);
+      onDataFromFirstForm(request.data.completion); // Pasamos el dato al padre
+      onMoveForward(); // Movemos al siguiente slide
+    } catch (error) {
+      console.error("Error uploading files:", error);
+    }
   };
 
-  useEffect(() => {
-    localStorage.setItem("pdfFiles", JSON.stringify(pdfFiles));
-  }, [pdfFiles]);
   return (
-    <div className="text-white  translate-y-[10rem]">
+    <div className="text-white translate-y-[10rem]">
       <div className="w-[85%] max-w-[1600px] m-auto grid gap-5">
         <FirstFormText />
-        <form>
+
+        <form onSubmit={handleSubmit} encType="multipart/form-data">
           <div className="flex gap-3">
-            <div className="h-10 group">
-              <div className="absolute border-2 border-dashed p-3 border-[#00FFE0] w-80 flex items-center justify-center rounded-xl gap-5   ">
+            <div className="items-center h-10 group">
+              <div className="absolute border-2 p-3 border-[#00FFE0] w-80 flex items-center justify-center rounded-xl gap-5">
                 <div className="flex items-center justify-center transition duration-300 opacity-30 group-hover:opacity-100">
-                  <div className="text-[#00FFE0] p-7 bg-black rounded-full  ">
+                  <div className="text-[#00FFE0] p-7 bg-black rounded-full">
                     <IoCloudUploadSharp className="text-2xl" />
                   </div>
                 </div>
@@ -45,13 +52,22 @@ export default function FirstForm() {
               </div>
               <input
                 type="file"
-                name=""
-                id=""
-                className="relative border-2 border-white opacity-0 cursor-pointer h-28 w-80"
+                name="pdfFiles"
+                id="pdfFiles"
+                className="relative opacity-0 cursor-pointer h-28 w-80"
                 accept="application/pdf"
                 multiple
-                onChange={handleFileUpload}
+                onChange={handleFileChange }
               />
+            </div>
+            <div className="grid items-center h-28">
+              {files.length > 0 ? (
+                <button className="px-10 py-7 bg-[#00FFE0] text-black font-bold rounded-xl">
+                  Generar
+                </button>
+              ) : (
+                "no hay archivos"
+              )}
             </div>
           </div>
         </form>
